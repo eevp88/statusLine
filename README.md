@@ -2,7 +2,7 @@
 
 Statusline personalizado para [Claude Code](https://claude.ai/code) que muestra información útil del contexto actual en cada turno de conversación.
 
-![statusline preview](https://raw.githubusercontent.com/eevp88/statusLine/main/preview.png)
+![statusline preview](https://raw.githubusercontent.com/eevp88/statusLine/main/preview.svg)
 
 ## Qué muestra
 
