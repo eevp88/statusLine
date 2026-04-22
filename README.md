@@ -19,8 +19,8 @@ Statusline personalizado para [Claude Code](https://claude.ai/code) que muestra 
 
 ### Alertas de contexto
 
-- **75%+** → aviso suave: `💾 pronto compacta`
-- **90%+** → alerta urgente parpadeante: `💾 GUARDÁ EN ENGRAM`
+- **75%+** → aviso suave: `💾 contexto casi lleno`
+- **90%+** → alerta urgente parpadeante: `💾 GUARDÁ EL CONTEXTO`
 
 ## Requisitos
 
