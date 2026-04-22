@@ -4,7 +4,11 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="$HOME/.claude/scripts"
 CONF_FILE="$HOME/.claude/statusline.conf"
+VERSION_FILE="$HOME/.claude/statusline.version"
 SETTINGS="$HOME/.claude/settings.json"
+CURRENT_VERSION="$(cat "$SCRIPT_DIR/VERSION" 2>/dev/null || echo "?")"
+RECONFIGURE=false
+[[ "${1:-}" == "--reconfigure" ]] && RECONFIGURE=true
 
 install_pkg() {
   local pkg="$1"
@@ -23,20 +27,43 @@ install_pkg() {
   fi
 }
 
-echo "→ Verificando dependencias..."
-for cmd in jq git; do
-  if ! command -v "$cmd" &>/dev/null; then
-    echo "  ✗ '$cmd' no encontrado"
-    install_pkg "$cmd"
+if [ "$RECONFIGURE" = "false" ]; then
+  echo "→ Verificando dependencias..."
+  for cmd in jq git; do
+    if ! command -v "$cmd" &>/dev/null; then
+      echo "  ✗ '$cmd' no encontrado"
+      install_pkg "$cmd"
+    fi
+  done
+  echo "  ✓ jq y git disponibles"
+
+  INSTALLED_VERSION="$(cat "$VERSION_FILE" 2>/dev/null || echo "")"
+  if [ -n "$INSTALLED_VERSION" ]; then
+    if [ "$INSTALLED_VERSION" = "$CURRENT_VERSION" ]; then
+      echo "  ✓ versión $CURRENT_VERSION ya instalada"
+    else
+      echo "  ↑ actualizando $INSTALLED_VERSION → $CURRENT_VERSION"
+    fi
+  else
+    echo "  ✓ versión $CURRENT_VERSION"
   fi
-done
-echo "  ✓ jq y git disponibles"
-echo ""
+  echo ""
+fi
 
 NAMES=("modelo"     "usuario"             "carpeta"                    "branch"            "contexto"                   "tokens"                     "costo"                       "rate_limit"                        "alertas")
 DESCS=("Modelo activo de Claude" "Usuario del sistema" "Directorio de trabajo actual" "Branch git activo" "Barra de uso del contexto" "Tokens de entrada y salida" "Costo acumulado de la sesión" "Rate limit con countdown al reset" "Alertas de contexto lleno")
 VARS=( "SHOW_MODEL"  "SHOW_USER"           "SHOW_DIR"                   "SHOW_BRANCH"       "SHOW_CONTEXT"               "SHOW_TOKENS"                "SHOW_COST"                   "SHOW_RATE"                         "SHOW_ALERTS")
-SEL=(   1             1                     1                             1                   1                             1                            1                             0                                   1)
+
+if [ -f "$CONF_FILE" ]; then
+  source "$CONF_FILE"
+  SEL=(
+    "${SHOW_MODEL:-1}" "${SHOW_USER:-1}" "${SHOW_DIR:-1}" "${SHOW_BRANCH:-1}"
+    "${SHOW_CONTEXT:-1}" "${SHOW_TOKENS:-1}" "${SHOW_COST:-1}"
+    "${SHOW_RATE:-0}" "${SHOW_ALERTS:-1}"
+  )
+else
+  SEL=(1 1 1 1 1 1 1 0 1)
+fi
 
 COUNT=${#NAMES[@]}
 CUR=0
@@ -91,6 +118,12 @@ mkdir -p "$(dirname "$CONF_FILE")"
 } > "$CONF_FILE"
 echo "  ✓ $CONF_FILE"
 
+if [ "$RECONFIGURE" = "true" ]; then
+  echo ""
+  echo "✅ Configuración actualizada."
+  exit 0
+fi
+
 echo "→ Instalando status.sh..."
 mkdir -p "$TARGET_DIR"
 cp "$SCRIPT_DIR/status.sh" "$TARGET_DIR/status.sh"
@@ -107,6 +140,9 @@ UPDATED=$(jq --arg cmd "$STATUS_CMD" \
   "$SETTINGS")
 echo "$UPDATED" > "$SETTINGS"
 echo "  ✓ statusLine configurado en $SETTINGS"
+
+echo "$CURRENT_VERSION" > "$VERSION_FILE"
+echo "  ✓ versión $CURRENT_VERSION guardada"
 
 echo ""
 echo "✅ Listo. Reiniciá Claude Code para ver el nuevo statusline."
