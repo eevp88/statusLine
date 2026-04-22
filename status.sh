@@ -19,9 +19,13 @@ if [ -z "$BRANCH" ] && [ -d "$DIR/modules" ]; then
   [ -n "$LATEST_DIR" ] && BRANCH=$(git -C "$LATEST_DIR" branch --show-current 2>/dev/null)
 fi
 
+CONF="${HOME}/.claude/statusline.conf"
+[ -f "$CONF" ] && source "$CONF"
+: "${SHOW_MODEL:=1}" "${SHOW_USER:=1}" "${SHOW_DIR:=1}" "${SHOW_BRANCH:=1}"
+: "${SHOW_CONTEXT:=1}" "${SHOW_TOKENS:=1}" "${SHOW_COST:=1}"
+: "${SHOW_RATE:=1}" "${SHOW_ALERTS:=1}"
+
 RESET='\033[0m'
-BOLD='\033[1m'
-DIM='\033[2m'
 CYAN='\033[1;38;2;0;230;255m'
 PINK='\033[1;38;2;255;60;200m'
 YELLOW='\033[1;38;2;255;220;0m'
@@ -33,17 +37,20 @@ if   [ "$PCT" -ge 85 ]; then BAR_COLOR='\033[1;38;2;255;60;60m'
 elif [ "$PCT" -ge 60 ]; then BAR_COLOR='\033[1;38;2;255;180;0m'
 else BAR_COLOR='\033[1;38;2;0;255;120m'; fi
 
-if   [ "$PCT" -ge 90 ]; then ENGRAM_ALERT="\033[1;38;2;255;60;60m\033[5m 💾 GUARDÁ EL CONTEXTO \033[0m"
-elif [ "$PCT" -ge 75 ]; then ENGRAM_ALERT="\033[1;38;2;255;180;0m 💾 contexto casi lleno \033[0m"
-else ENGRAM_ALERT=""; fi
+ALERT_TEXT=""
+if [ "$SHOW_ALERTS" = "1" ]; then
+  if   [ "$PCT" -ge 90 ]; then ALERT_TEXT="\033[1;38;2;255;60;60m\033[5m 💾 GUARDÁ EL CONTEXTO \033[0m"
+  elif [ "$PCT" -ge 75 ]; then ALERT_TEXT="\033[1;38;2;255;180;0m 💾 contexto casi lleno \033[0m"
+  fi
+fi
 
 FILLED=$((PCT / 10)); EMPTY=$((10 - FILLED))
 printf -v FILL "%${FILLED}s"; printf -v PAD "%${EMPTY}s"
 BAR="${FILL// /█}${PAD// /░}"
 COST_FMT=$(printf '$%.2f' "$COST")
 
-RATE_SUFFIX=""
-if [ -n "$RATE_5H" ]; then
+RATE_TEXT=""
+if [ "$SHOW_RATE" = "1" ] && [ -n "$RATE_5H" ]; then
   RATE_REM=$((100 - ${RATE_5H%.*}))
   RESET_IN=""
   if [ -n "$RATE_5H_RESET" ]; then
@@ -57,7 +64,21 @@ if [ -n "$RATE_5H" ]; then
       RESET_IN=" ahora"
     fi
   fi
-  RATE_SUFFIX="    ${ORANGE}🚧 (100%% - ${RATE_5H%.*}%%) => ${RATE_REM}%%${RESET_IN}${RESET}"
+  RATE_TEXT="${ORANGE}🚧 (100%% - ${RATE_5H%.*}%%) => ${RATE_REM}%%${RESET_IN}${RESET}"
 fi
 
-printf "${CYAN}[ ${MODEL} ]${RESET}    ${PINK}👤 ${USER}${RESET}    ${YELLOW}📁 ${DIR##*/}${RESET}    ${PURPLE}🌿 ${BRANCH}${RESET}    ${BAR_COLOR}🧠 ${BAR} ${PCT}%%${RESET}    ${PINK}↑${TOKENS_IN}${RESET} ${CYAN}↓${TOKENS_OUT}${RESET}    ${WHITE}${COST_FMT}${RESET}${RATE_SUFFIX}${ENGRAM_ALERT}\n"
+SEP="    "
+OUT=""
+_add() { [ -n "$OUT" ] && OUT+="$SEP"; OUT+="$1"; }
+
+[ "$SHOW_MODEL"   = "1" ] && _add "${CYAN}[ ${MODEL} ]${RESET}"
+[ "$SHOW_USER"    = "1" ] && _add "${PINK}👤 ${USER}${RESET}"
+[ "$SHOW_DIR"     = "1" ] && _add "${YELLOW}📁 ${DIR##*/}${RESET}"
+[ "$SHOW_BRANCH"  = "1" ] && _add "${PURPLE}🌿 ${BRANCH}${RESET}"
+[ "$SHOW_CONTEXT" = "1" ] && _add "${BAR_COLOR}🧠 ${BAR} ${PCT}%%${RESET}"
+[ "$SHOW_TOKENS"  = "1" ] && _add "${PINK}↑${TOKENS_IN}${RESET} ${CYAN}↓${TOKENS_OUT}${RESET}"
+[ "$SHOW_COST"    = "1" ] && _add "${WHITE}${COST_FMT}${RESET}"
+[ -n "$RATE_TEXT"  ]      && _add "$RATE_TEXT"
+[ -n "$ALERT_TEXT" ]      && _add "$ALERT_TEXT"
+
+printf "${OUT}\n"
