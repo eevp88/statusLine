@@ -1,13 +1,17 @@
 #!/bin/bash
 input=$(cat)
-MODEL=$(echo "$input" | jq -r '.model.display_name')
-DIR=$(echo "$input"   | jq -r '.workspace.current_dir')
-PCT=$(echo "$input"   | jq -r '.context_window.used_percentage // 0' | cut -d. -f1)
-COST=$(echo "$input"  | jq -r '.cost.total_cost_usd // 0')
-TOKENS_IN=$(echo "$input"  | jq -r '.context_window.total_input_tokens // 0')
-TOKENS_OUT=$(echo "$input" | jq -r '.context_window.total_output_tokens // 0')
-RATE_5H=$(echo "$input"      | jq -r '.rate_limits.five_hour.used_percentage // empty')
-RATE_5H_RESET=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
+IFS=$'\t' read -r MODEL DIR PCT COST TOKENS_IN TOKENS_OUT RATE_5H RATE_5H_RESET < <(
+  echo "$input" | jq -r '[
+    .model.display_name,
+    .workspace.current_dir,
+    (.context_window.used_percentage // 0 | floor | tostring),
+    (.cost.total_cost_usd // 0 | tostring),
+    (.context_window.total_input_tokens // 0 | tostring),
+    (.context_window.total_output_tokens // 0 | tostring),
+    (.rate_limits.five_hour.used_percentage // ""),
+    (.rate_limits.five_hour.resets_at // "")
+  ] | @tsv'
+)
 BRANCH=$(git -C "$DIR" branch --show-current 2>/dev/null)
 if [ -z "$BRANCH" ] && [ -d "$DIR/modules" ]; then
   LATEST_MOD=0; LATEST_DIR=""
