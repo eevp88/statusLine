@@ -21,8 +21,8 @@ Todos los elementos son opcionales — el instalador te permite elegir cuáles m
 
 ### Alertas de contexto
 
-- **75%+** → aviso suave: `💾 contexto casi lleno`
-- **90%+** → alerta urgente parpadeante: `💾 GUARDÁ EL CONTEXTO`
+- **60%+** → aviso suave: `💾 contexto casi lleno`
+- **80%+** → alerta urgente parpadeante: `💾 GUARDÁ EL CONTEXTO`
 
 ## Requisitos
 
