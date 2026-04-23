@@ -37,14 +37,14 @@ PURPLE='\033[1;38;2;160;100;255m'
 WHITE='\033[1;38;2;255;255;255m'
 ORANGE='\033[1;38;2;255;150;30m'
 
-if   [ "$PCT" -ge 85 ]; then BAR_COLOR='\033[1;38;2;255;60;60m'
+if   [ "$PCT" -ge 80 ]; then BAR_COLOR='\033[1;38;2;255;60;60m'
 elif [ "$PCT" -ge 60 ]; then BAR_COLOR='\033[1;38;2;255;180;0m'
 else BAR_COLOR='\033[1;38;2;0;255;120m'; fi
 
 ALERT_TEXT=""
 if [ "$SHOW_ALERTS" = "1" ]; then
-  if   [ "$PCT" -ge 90 ]; then ALERT_TEXT="\033[1;38;2;255;60;60m\033[5m 💾 GUARDÁ EL CONTEXTO \033[0m"
-  elif [ "$PCT" -ge 75 ]; then ALERT_TEXT="\033[1;38;2;255;180;0m 💾 contexto casi lleno \033[0m"
+  if   [ "$PCT" -ge 80 ]; then ALERT_TEXT="\033[1;38;2;255;60;60m\033[5m 💾 GUARDÁ EL CONTEXTO \033[0m"
+  elif [ "$PCT" -ge 60 ]; then ALERT_TEXT="\033[1;38;2;255;180;0m 💾 contexto casi lleno \033[0m"
   fi
 fi
 
