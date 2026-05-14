@@ -13,9 +13,10 @@ Statusline personalizado para [Claude Code](https://claude.ai/code) que muestra 
 | `📁 carpeta` | Nombre del directorio de trabajo actual |
 | `🌿 branch` | Branch git activo (con fallback a submódulos HMVC) |
 | `🧠 ██████░░░░ 60%` | Barra de uso del contexto (verde / amarillo / rojo) |
-| `↑ / ↓` | Tokens de entrada y salida acumulados |
+| `↑ / ↓` | Tokens de entrada (acumulados) y salida (acumulados por sesión) |
 | `$0.00` | Costo acumulado de la sesión en USD |
-| `🚧 rate limit` | Uso del rate limit con countdown al reset (si aplica) |
+| `🚧 rate limit` | Uso del rate limit 5h con countdown al reset (si aplica) |
+| `📅 7d: XX% usado` | Uso del rate limit semanal con countdown al reset (si aplica) |
 
 Todos los elementos son opcionales — el instalador te permite elegir cuáles mostrar.
 
@@ -23,6 +24,10 @@ Todos los elementos son opcionales — el instalador te permite elegir cuáles m
 
 - **60%+** → aviso suave: `💾 contexto casi lleno`
 - **80%+** → alerta urgente parpadeante: `💾 GUARDÁ EL CONTEXTO`
+
+### Acumulador de tokens de salida
+
+Los tokens `↓` se acumulan por sesión en `/tmp/statusline-out-<session_id>.txt`. Cada turno suma el output del turno anterior al total, dando un contador creciente en lugar de mostrar solo el último valor.
 
 ## Requisitos
 
@@ -50,7 +55,7 @@ Durante la instalación aparece un menú interactivo para elegir qué elementos 
   [x]  contexto     —  Barra de uso del contexto
   [x]  tokens       —  Tokens de entrada y salida
   [x]  costo        —  Costo acumulado de la sesión
-  [ ]  rate_limit   —  Rate limit con countdown al reset
+  [ ]  rate_limit   —  Rate limit 5h y 7d con countdown al reset
   [x]  alertas      —  Alertas de contexto lleno
 ```
 
@@ -100,6 +105,7 @@ SHOW_CONTEXT=1
 SHOW_TOKENS=1
 SHOW_COST=1
 SHOW_RATE=0
+# 0 = oculta tanto el rate 5h como el 7d
 SHOW_ALERTS=1
 ```
 
